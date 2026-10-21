@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 import uuid
 from pathlib import Path
 from typing import Any
 
+from sce_af.export_docs import write_export_zip
 from sce_af.merge import apply_header_edits
 from sce_af.paths import repo_root
 from sce_af.pipeline import run_pipeline
@@ -79,10 +81,31 @@ def _update(job_id: str, **fields: Any) -> None:
         job.update(fields)
 
 
+def _write_timing(job_id: str, timing: dict[str, Any]) -> None:
+    path = _job_dir(job_id) / "timing.json"
+    path.write_text(json.dumps(timing, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _invoke_runner(
+    pdf_path: Path,
+    filename: str,
+    on_progress: Any,
+    timing: dict[str, Any],
+) -> dict[str, Any]:
+    try:
+        return RUNNER(pdf_path, filename, on_progress=on_progress, timing_out=timing)
+    except TypeError as exc:
+        if "timing_out" not in str(exc):
+            raise
+        return RUNNER(pdf_path, filename, on_progress=on_progress)
+
+
 def _run(job_id: str) -> None:
     job = get_job(job_id)
     if job is None:
         return
+    timing: dict[str, Any] = {"filename": job["filename"], "ok": False, "error": ""}
+    started = time.perf_counter()
     _update(job_id, status="running", progress={"stage": "start", "done": 0, "total": 0, "message": "开始"})
     try:
         if REQUIRE_KEY and not has_deepseek_key():
@@ -91,9 +114,12 @@ def _run(job_id: str) -> None:
         def on_progress(info: dict[str, Any]) -> None:
             _update(job_id, progress=info)
 
-        result = RUNNER(Path(job["pdf_path"]), job["filename"], on_progress=on_progress)
+        result = _invoke_runner(Path(job["pdf_path"]), job["filename"], on_progress, timing)
         out = _job_dir(job_id) / "result.json"
         out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+        timing["ok"] = True
+        timing["wall_s"] = round(time.perf_counter() - started, 4)
+        _write_timing(job_id, timing)
         _update(
             job_id,
             status="done",
@@ -101,6 +127,10 @@ def _run(job_id: str) -> None:
             progress={"stage": "done", "done": 1, "total": 1, "message": "完成"},
         )
     except Exception as exc:  # noqa: BLE001 — surface any worker failure to the UI
+        timing["ok"] = False
+        timing["error"] = str(exc)
+        timing["wall_s"] = round(time.perf_counter() - started, 4)
+        _write_timing(job_id, timing)
         _update(
             job_id,
             status="error",
@@ -118,3 +148,13 @@ def patch_header(job_id: str, edits: dict[str, Any]) -> dict[str, Any] | None:
         out = _job_dir(job_id) / "result.json"
         out.write_text(json.dumps(job["result"], ensure_ascii=False, indent=2), encoding="utf-8")
         return public_job(job)
+
+
+def export_job(job_id: str, edits: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    job = patch_header(job_id, edits or {})
+    if job is None:
+        return None
+    folder = _job_dir(job_id)
+    zip_path = folder / "docs.zip"
+    filename = write_export_zip(job["result"], zip_path, fallback=job_id)
+    return {"path": zip_path, "filename": filename, "job": job}

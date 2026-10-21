@@ -1,8 +1,8 @@
-# SCE-af v0.1.0
+# SCE-af v0.2.1
 
 本仓库说明：结构、实现、开发用法。给同事的安装与发布包见仓库根 [`README.md`](../README.md)。
 
-业务规则只认 [`04-rule.md`](04-rule.md)。需求进 [`02-update_backlog.md`](02-update_backlog.md)。已发布变更见 [`03-log.md`](03-log.md)。
+业务规则只认 [`04-rule.md`](04-rule.md)。需求进 [`02-update_backlog.md`](02-update_backlog.md)。已发布变更见 [`03-log.md`](03-log.md)。流程图见 [`05-flow.md`](05-flow.md)。
 
 ## 1. 定位与边界
 
@@ -10,7 +10,7 @@
 
 | 做 | 不做 |
 | --- | --- |
-| 把气泡图拆开识图，汇总成 JSON | 不当局域网服务；不把整份 PDF 一次送进模型；本期不导出 Excel / QCP |
+| 把气泡图拆开识图，汇总成 JSON，再导出 SIP / 控制计划 / 检查清单 / 特殊特性清单 / 全尺寸 FAI | 不当局域网服务；不把整份 PDF 一次送进模型；不读字典、不画工序 |
 | `http://127.0.0.1:2054/` | 远程多用户服务 |
 
 入口只有 `run.py`。
@@ -35,6 +35,7 @@ DeepSeek 密钥放项目根 `api-key.md`，已被 gitignore。
     app.py               标准库 HTTP
     jobs.py              后台任务
     pipeline.py          切图 → 识图 → 汇总
+    export_docs.py       JSON 填 SIP / QCP / 检查清单 / 特殊特性清单 / FAI
     slice.py / detect.py 页分类与红色气泡
     vision.py            DeepSeek 小图请求
     limits.py            公差解析
@@ -42,11 +43,14 @@ DeepSeek 密钥放项目根 `api-key.md`，已被 gitignore。
     paths.py
     open_page.py
   web/                   零构建前端
+  data/template/         SIP、QCP、检查清单、特殊特性清单
   tests/
   release/               pack.py（复制本机 .venv）
-  docs/                  01～04
-  output/jobs/           每次任务的 PDF 与 JSON
+  docs/                  01～05（含流程图）
+  output/jobs/           每次任务的 PDF、JSON 与导出 zip
 ```
+
+当前怎么跑见 [`05-flow.md`](05-flow.md)。
 
 打包不带 `docs/`、`tests/`、`AGENTS.md`。
 
@@ -54,7 +58,7 @@ DeepSeek 密钥放项目根 `api-key.md`，已被 gitignore。
 
 `web/` 只打 API。领域逻辑在 `sce_af/`，不 import `http.server`。版本只出自 `__init__.__version__`，前端读 `/api/version`。
 
-主流程不读 PDF。`plan_pdf` 切出 title / notes / bubble 任务，每块一张 PNG；`vision.complete_vision` 只看这一块；`merge_job` 解析公差并列出问题。
+主流程不读 PDF。`plan_pdf` 切出 title / notes / bubble 任务，每块一张 PNG；`vision.complete_vision` 只看这一块；`merge_job` 解析公差并列出问题。核对后 `export_docs` 复制模板填格。
 
 ## 4. 测试与发布
 

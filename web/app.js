@@ -54,6 +54,24 @@ const showResult = (job) => {
     "cc_no", "sc_no", "name", "params", "view", "zone", "location", "page",
   ]);
   $("download").href = `/api/jobs/${job.id}/json`;
+  $("export_btn").dataset.jobId = job.id;
+};
+
+const headerEdits = () => ({
+  customer: $("f_customer").value,
+  part_name: $("f_part_name").value,
+  mold_no: $("f_mold_no").value,
+  part_no: $("f_part_no").value,
+  drawing_no: $("f_drawing_no").value,
+  revision: $("f_revision").value,
+});
+
+const currentJobId = () => {
+  const fromBtn = $("export_btn").dataset.jobId;
+  if (fromBtn) return fromBtn;
+  const href = $("download").getAttribute("href") || "";
+  const match = href.match(/\/api\/jobs\/([^/]+)\//);
+  return match ? match[1] : "";
 };
 
 const poll = async (id) => {
@@ -123,21 +141,12 @@ const boot = async () => {
   }
 
   $("save_header").addEventListener("click", async () => {
-    const href = $("download").getAttribute("href") || "";
-    const match = href.match(/\/api\/jobs\/([^/]+)\//);
-    if (!match) return;
-    const payload = {
-      customer: $("f_customer").value,
-      part_name: $("f_part_name").value,
-      mold_no: $("f_mold_no").value,
-      part_no: $("f_part_no").value,
-      drawing_no: $("f_drawing_no").value,
-      revision: $("f_revision").value,
-    };
-    const resp = await fetch(`/api/jobs/${match[1]}`, {
+    const id = currentJobId();
+    if (!id) return;
+    const resp = await fetch(`/api/jobs/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(headerEdits()),
     });
     const job = await resp.json();
     if (!resp.ok) {
@@ -146,6 +155,38 @@ const boot = async () => {
     }
     $("status").textContent = "编号已保存。";
     showResult(job);
+  });
+
+  $("export_btn").addEventListener("click", async () => {
+    const id = currentJobId();
+    if (!id) return;
+    $("status").textContent = "正在导出文档…";
+    const resp = await fetch(`/api/jobs/${id}/export`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(headerEdits()),
+    });
+    if (!resp.ok) {
+      let message = "导出失败";
+      try {
+        const payload = await resp.json();
+        message = payload.error || message;
+      } catch (err) {
+        message = "导出失败";
+      }
+      $("status").textContent = message;
+      return;
+    }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${id}-docs.zip`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    $("status").textContent = "文档已导出。";
   });
 };
 

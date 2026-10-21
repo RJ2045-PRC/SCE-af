@@ -16,7 +16,7 @@ from pathlib import Path
 APP_SLUG = "sce-af"
 DISPLAY_NAME = "SCE-af"
 PACKAGE = "sce_af"
-RUNTIME_IMPORTS = "import sce_af, pymupdf, PIL"
+RUNTIME_IMPORTS = "import sce_af, pymupdf, PIL, openpyxl"
 # --- end CONFIG ---
 
 RELEASE_DIR = Path(__file__).resolve().parent
@@ -39,7 +39,7 @@ DOC_MAP = (
     ("README.md", "README.md"),
     ("docs/03-log.md", "log.md"),
 )
-COPY_DIRS = ("web", PACKAGE)
+COPY_DIRS = ("web", PACKAGE, "data")
 SKIP_NAMES = {"__pycache__", ".DS_Store"}
 NEVER_IN_DEST = (
     "testing_files",

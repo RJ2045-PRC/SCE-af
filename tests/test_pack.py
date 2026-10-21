@@ -108,7 +108,9 @@ def test_copy_tree_whitelist_and_empty_output() -> None:
             encoding="utf-8"
         )
         assert f"v{__version__}" in (dest / "README.md").read_text(encoding="utf-8")
-        assert COPY_DIRS == ("web", PACKAGE)
+        assert COPY_DIRS == ("web", PACKAGE, "data")
+        assert (dest / "data" / "template" / "SIP.xlsx").is_file()
+        assert (dest / "data" / "template" / "QCP Template.xlsx").is_file()
 
 
 def test_assert_readme_mentions_version() -> None:
@@ -135,6 +137,7 @@ def test_runtime_requirements_exclude_pytest() -> None:
     runtime = (ROOT / "requirements.txt").read_text(encoding="utf-8")
     dev = (ROOT / "requirements-dev.txt").read_text(encoding="utf-8")
     assert "pytest" not in runtime.lower()
+    assert "openpyxl" in runtime.lower()
     assert "-r requirements.txt" in dev
     assert "pytest" in dev.lower()
 

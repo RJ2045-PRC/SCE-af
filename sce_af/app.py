@@ -14,7 +14,7 @@ from urllib.parse import unquote, urlparse
 from urllib.request import Request, urlopen
 
 from sce_af import __version__ as APP_VERSION
-from sce_af.jobs import create_job, get_job, patch_header, public_job
+from sce_af.jobs import create_job, export_job, get_job, patch_header, public_job
 from sce_af.paths import web_dir
 from sce_af.secrets import has_deepseek_key
 
@@ -149,6 +149,16 @@ class Handler(BaseHTTPRequestHandler):
         if self.command != "HEAD":
             self.wfile.write(body)
 
+    def _send_attachment(self, data: bytes, content_type: str, filename: str) -> None:
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(data)
+
     def do_HEAD(self) -> None:
         self.do_GET()
 
@@ -181,17 +191,7 @@ class Handler(BaseHTTPRequestHandler):
                     self._send(status, body, "application/json; charset=utf-8")
                     return
                 payload = json.dumps(job["result"], ensure_ascii=False, indent=2).encode("utf-8")
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.send_header("Content-Length", str(len(payload)))
-                self.send_header(
-                    "Content-Disposition",
-                    f'attachment; filename="{job_id}.json"',
-                )
-                self.send_header("Cache-Control", "no-cache")
-                self.end_headers()
-                if self.command != "HEAD":
-                    self.wfile.write(payload)
+                self._send_attachment(payload, "application/json; charset=utf-8", f"{job_id}.json")
                 return
             job = get_job(rest)
             if job is None:
@@ -219,6 +219,27 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
         path = posixpath.normpath(parsed.path)
+        if path.startswith("/api/jobs/") and path.endswith("/export"):
+            job_id = path[len("/api/jobs/") : -len("/export")]
+            try:
+                edits = _read_json(self)
+            except (ValueError, json.JSONDecodeError):
+                status, body = _json_bytes({"error": "JSON 无效"}, 400)
+                self._send(status, body, "application/json; charset=utf-8")
+                return
+            try:
+                exported = export_job(job_id, edits)
+            except ValueError as exc:
+                status, body = _json_bytes({"error": str(exc)}, 400)
+                self._send(status, body, "application/json; charset=utf-8")
+                return
+            if exported is None:
+                status, body = _json_bytes({"error": "not found"}, 404)
+                self._send(status, body, "application/json; charset=utf-8")
+                return
+            data = Path(exported["path"]).read_bytes()
+            self._send_attachment(data, "application/zip", exported["filename"])
+            return
         if path != "/api/jobs":
             status, body = _json_bytes({"error": "not found"}, 404)
             self._send(status, body, "application/json; charset=utf-8")

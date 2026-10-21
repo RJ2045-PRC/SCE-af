@@ -48,7 +48,19 @@ def test_job_http_with_stub_runner():
                 "drawing_no": "",
                 "revision": "",
             },
-            "bubbles": [],
+            "bubbles": [
+                {
+                    "num": "2",
+                    "special": "SC",
+                    "special_no": "1",
+                    "type": "尺寸",
+                    "description": "2.2 ±0.1",
+                    "page": 1,
+                    "min_val": 2.1,
+                    "std_val": 2.2,
+                    "max_val": 2.3,
+                }
+            ],
             "requirements": {"notes": [], "characteristics": []},
             "issues": [],
         }
@@ -88,6 +100,18 @@ def test_job_http_with_stub_runner():
         with urlopen(patch) as resp:
             updated = json.loads(resp.read().decode("utf-8"))
         assert updated["result"]["header"]["part_no"] == "P000005766001"
+
+        export = Request(
+            f"http://{host}:{port}/api/jobs/{created['id']}/export",
+            data=json.dumps({"customer": "测试客户", "revision": "A"}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urlopen(export) as resp:
+            payload = resp.read()
+            disp = resp.headers.get("Content-Disposition") or ""
+        assert payload[:2] == b"PK"
+        assert "docs.zip" in disp
     finally:
         jobs.REQUIRE_KEY = True
         from sce_af.pipeline import run_pipeline

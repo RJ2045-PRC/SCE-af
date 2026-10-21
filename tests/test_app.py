@@ -90,6 +90,7 @@ def test_health_and_index_http() -> None:
         with urlopen(f"http://{host}:{port}/") as resp:
             html = resp.read().decode("utf-8")
         assert 'id="app_version"' in html
+        assert 'id="export_btn"' in html
         assert "SC_VERSION" not in html
     finally:
         httpd.shutdown()
