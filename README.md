@@ -1,8 +1,10 @@
-# SCE-af v0.2.1
+# SCE-af v0.2.3
 
 把气泡图拆开识图，汇总成 JSON，再导出 SIP、控制计划、检查清单、特殊特性清单和全尺寸 FAI。入口只有本地网页，不提供命令行。不做：不当局域网服务；不把整份 PDF 一次送进模型。规则见 [`docs/04-rule.md`](docs/04-rule.md)。
 
-当前版本：**v0.2.1**。
+当前版本：**v0.2.3**。
+
+静态核对 Demo（不必克隆或本机启动）：[https://rj2045-prc.github.io/SCE-af/](https://rj2045-prc.github.io/SCE-af/)
 
 ## 快速启动
 

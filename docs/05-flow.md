@@ -9,13 +9,14 @@ flowchart TD
   openPage[打开127.0.0.1] --> pickPdf[选择气泡图PDF]
   pickPdf --> upload["POST /api/jobs"]
   upload --> waitJob[页面轮询进度]
-  waitJob --> review[核对基本信息气泡技术要求]
-  review --> editHeader[可手改编号]
-  editHeader --> download[下载JSON]
-  editHeader --> exportDocs["导出文档 zip"]
+  waitJob --> bubblesFirst[气泡先出现]
+  bubblesFirst --> review[核对基本信息气泡技术要求]
+  review --> editRows[可手改编号与FAI]
+  editRows --> download[下载JSON]
+  editRows --> exportDocs["导出文档 zip"]
 ```
 
-入口是本机网页。上传后页面轮询任务进度；识图完成后核对三块 JSON，需要时手改编号，再下载结果或导出五份 Excel。
+入口是本机网页。上传后页面轮询任务进度；气泡识图完成一条就出现一行 FAI，技术要求全部结束后再导出。需要时手改编号、描述和三个数值，确认后再下载 JSON 或导出五份 Excel。
 
 ## 程序路径
 
@@ -25,7 +26,7 @@ flowchart TD
 flowchart TD
   savePdf[任务目录写入source.pdf] --> raster[逐页光栅]
   raster --> slice[切成标题栏红色气泡或技术要求条带]
-  slice --> vision["DeepSeek识图，默认最多3路"]
+  slice --> vision["DeepSeek识图，默认最多100路"]
   vision --> merge[汇总JSON并解析公差列出问题]
   merge --> resultFile[写入result.json]
   resultFile --> page[页面核对]
@@ -34,7 +35,7 @@ flowchart TD
   exportPost --> zipOut[写入docs.zip]
 ```
 
-`plan_pdf` 先光栅再切块；每块一张 PNG，`complete_vision` 只看这一块。识图默认最多 3 路并发。`merge_job` 解析公差并列出问题，结果写入任务目录的 `result.json`。
+`plan_pdf` 先光栅再切块；每块一张 PNG，`complete_vision` 只看这一块。识图默认最多 100 路并发。`merge_job` 解析公差并列出问题，结果写入任务目录的 `result.json`。
 
 ## JSON 每块写到哪儿
 

@@ -1,0 +1,708 @@
+const SAMPLE = {
+  "version": "0.2.3",
+  "status": "done",
+  "filename": "HRJ-DWG-2026-0187_RevB_支架-Bracket_演示图纸.pdf",
+  "header": {
+    "filename": "HRJ-DWG-2026-0187_RevB_支架-Bracket_演示图纸.pdf",
+    "customer": "DEMO CUSTOMER（示例）",
+    "part_name": "安装支架 BRACKET-MNTG",
+    "mold_no": "M-2026-0187",
+    "part_no": "HRJ-RM-PA66GF30-01",
+    "drawing_no": "HRJ-DWG-2026-0187",
+    "revision": "B"
+  },
+  "bubbles": [
+    {
+      "num": "1",
+      "special": "NA",
+      "description": "120 +0.25/-0.25",
+      "min_val": 119.75,
+      "std_val": 120.0,
+      "max_val": 120.25,
+      "crop": "p01-002.png"
+    },
+    {
+      "num": "2",
+      "special": "SC",
+      "description": "62.1 -0.2/-0.4",
+      "min_val": 61.7,
+      "std_val": 62.1,
+      "max_val": 61.9,
+      "crop": "p01-015.png"
+    },
+    {
+      "num": "4",
+      "special": "NA",
+      "description": "12",
+      "min_val": 12.0,
+      "std_val": 12.0,
+      "max_val": 12.0,
+      "crop": "p01-012.png"
+    },
+    {
+      "num": "5",
+      "special": "SC",
+      "description": "2X Ø8.5 +0.1/0",
+      "min_val": 8.5,
+      "std_val": 8.5,
+      "max_val": 8.6,
+      "crop": "p02-018.png"
+    },
+    {
+      "num": "5",
+      "special": "SC",
+      "description": "2X Ø8.5 +0.1/0",
+      "min_val": 8.5,
+      "std_val": 8.5,
+      "max_val": 8.6,
+      "crop": "p01-006.png"
+    },
+    {
+      "num": "6",
+      "special": "NA",
+      "description": "Ø12 +0.2/-0.2",
+      "min_val": 11.8,
+      "std_val": 12.0,
+      "max_val": 12.2,
+      "crop": "p01-001.png"
+    },
+    {
+      "num": "7",
+      "special": "NA",
+      "description": "R3.5",
+      "min_val": 3.5,
+      "std_val": 3.5,
+      "max_val": 3.5,
+      "crop": "p01-014.png"
+    },
+    {
+      "num": "8",
+      "special": "SC",
+      "description": "45°±1°",
+      "min_val": 44.0,
+      "std_val": 45.0,
+      "max_val": 46.0,
+      "crop": "p01-018.png"
+    },
+    {
+      "num": "9",
+      "special": "SC",
+      "description": "位置度φ0.5",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.5,
+      "crop": "p01-004.png"
+    },
+    {
+      "num": "10",
+      "special": "NA",
+      "description": "垂直度0.15",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.15,
+      "crop": "p01-007.png"
+    },
+    {
+      "num": "11",
+      "special": "NA",
+      "description": "直线度0.1",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.1,
+      "crop": "p01-010.png"
+    },
+    {
+      "num": "12",
+      "special": "NA",
+      "description": "面轮廓度0.4 UZ -0.1",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.4,
+      "crop": "p01-019.png"
+    },
+    {
+      "num": "12",
+      "special": "NA",
+      "description": "面轮廓度0.4 UZ -0.1",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.4,
+      "crop": "p02-012.png"
+    },
+    {
+      "num": "13",
+      "special": "NA",
+      "description": "45 +0.2/-0.2",
+      "min_val": 44.8,
+      "std_val": 45.0,
+      "max_val": 45.2,
+      "crop": "p01-003.png"
+    },
+    {
+      "num": "14",
+      "special": "NA",
+      "description": "8 +0.05/-0.05",
+      "min_val": 7.95,
+      "std_val": 8.0,
+      "max_val": 8.05,
+      "crop": "p02-008.png"
+    },
+    {
+      "num": "14",
+      "special": "NA",
+      "description": "8 +0.05/-0.05",
+      "min_val": 7.95,
+      "std_val": 8.0,
+      "max_val": 8.05,
+      "crop": "p01-016.png"
+    },
+    {
+      "num": "15",
+      "special": "NA",
+      "description": "20 +0.1/-0.1",
+      "min_val": 19.9,
+      "std_val": 20.0,
+      "max_val": 20.1,
+      "crop": "p02-013.png"
+    },
+    {
+      "num": "15",
+      "special": "NA",
+      "description": "20 +0.1/-0.1",
+      "min_val": 19.9,
+      "std_val": 20.0,
+      "max_val": 20.1,
+      "crop": "p01-017.png"
+    },
+    {
+      "num": "16",
+      "special": "NA",
+      "description": "(25)",
+      "min_val": 25.0,
+      "std_val": 25.0,
+      "max_val": 25.0,
+      "crop": "p01-013.png"
+    },
+    {
+      "num": "16",
+      "special": "NA",
+      "description": "(25)",
+      "min_val": 25.0,
+      "std_val": 25.0,
+      "max_val": 25.0,
+      "crop": "p02-014.png"
+    },
+    {
+      "num": "17",
+      "special": "CC",
+      "description": "17",
+      "min_val": 17.0,
+      "std_val": 17.0,
+      "max_val": 17.0,
+      "crop": "p01-021.png"
+    },
+    {
+      "num": "17",
+      "special": "NA",
+      "description": "25.0±0.5",
+      "min_val": 24.5,
+      "std_val": 25.0,
+      "max_val": 25.5,
+      "crop": "p01-020.png"
+    },
+    {
+      "num": "18",
+      "special": "NA",
+      "description": "5X Ø2.2 +0.1/-0.1",
+      "min_val": 2.1,
+      "std_val": 2.2,
+      "max_val": 2.3000000000000003,
+      "crop": "p01-022.png"
+    },
+    {
+      "num": "19",
+      "special": "CC",
+      "description": "同轴度φ0.2",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.2,
+      "crop": "p01-005.png"
+    },
+    {
+      "num": "20",
+      "special": "NA",
+      "description": "倾斜度0.25",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.25,
+      "crop": "p01-008.png"
+    },
+    {
+      "num": "21",
+      "special": "NA",
+      "description": "对称度0.3",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.3,
+      "crop": "p01-011.png"
+    },
+    {
+      "num": "22",
+      "special": "NA",
+      "description": "0.05",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.05,
+      "crop": "p02-003.png"
+    },
+    {
+      "num": "23",
+      "special": "NA",
+      "description": "0.04",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.04,
+      "crop": "p02-004.png"
+    },
+    {
+      "num": "24",
+      "special": "NA",
+      "description": "直线度0.08",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.08,
+      "crop": "p02-007.png"
+    },
+    {
+      "num": "25",
+      "special": "NA",
+      "description": "平行度0.12",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.12,
+      "crop": "p02-009.png"
+    },
+    {
+      "num": "26",
+      "special": "NA",
+      "description": "倾斜度0.2",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.2,
+      "crop": "p02-011.png"
+    },
+    {
+      "num": "27",
+      "special": "NA",
+      "description": "线轮廓度0.3",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.3,
+      "crop": "p02-016.png"
+    },
+    {
+      "num": "28",
+      "special": "NA",
+      "description": "倾斜度0.3",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.3,
+      "crop": "p02-017.png"
+    },
+    {
+      "num": "29",
+      "special": "NA",
+      "description": "位置度0.8",
+      "min_val": 0.0,
+      "std_val": 0.0,
+      "max_val": 0.8,
+      "crop": "p02-019.png"
+    },
+    {
+      "num": "30",
+      "special": "NA",
+      "description": "M6×1.0-6H",
+      "min_val": 0.0,
+      "std_val": 6.0,
+      "max_val": 7.0,
+      "crop": "p02-005.png"
+    },
+    {
+      "num": "30",
+      "special": "NA",
+      "description": "52±0.2",
+      "min_val": 51.8,
+      "std_val": 52.0,
+      "max_val": 52.2,
+      "crop": "p01-009.png"
+    },
+    {
+      "num": "31",
+      "special": "NA",
+      "description": "3X Ø6.5 +0.1/-0.1",
+      "min_val": 6.4,
+      "std_val": 6.5,
+      "max_val": 6.6,
+      "crop": "p02-001.png"
+    },
+    {
+      "num": "32",
+      "special": "NA",
+      "description": "R1.0",
+      "min_val": 1.0,
+      "std_val": 1.0,
+      "max_val": 1.0,
+      "crop": "p02-010.png"
+    },
+    {
+      "num": "33",
+      "special": "NA",
+      "description": "0.875 ±0.005 INCH",
+      "min_val": 0.87,
+      "std_val": 0.875,
+      "max_val": 0.88,
+      "crop": "p02-015.png"
+    },
+    {
+      "num": "34",
+      "special": "NA",
+      "description": "2 MAX",
+      "min_val": 2.0,
+      "std_val": 2.0,
+      "max_val": 2.0,
+      "crop": "p02-002.png"
+    },
+    {
+      "num": "35",
+      "special": "NA",
+      "description": "45±0.2",
+      "min_val": 44.8,
+      "std_val": 45.0,
+      "max_val": 45.2,
+      "crop": "p02-006.png"
+    }
+  ],
+  "issues": [
+    {
+      "message": "气泡号 12 出现了 2 次。"
+    },
+    {
+      "message": "气泡号 14 出现了 2 次。"
+    },
+    {
+      "message": "气泡号 15 出现了 2 次。"
+    },
+    {
+      "message": "气泡号 16 出现了 2 次。"
+    },
+    {
+      "message": "气泡号 17 出现了 2 次。"
+    },
+    {
+      "message": "气泡号 30 出现了 2 次。"
+    },
+    {
+      "message": "气泡号 5 出现了 2 次。"
+    },
+    {
+      "message": "气泡 9 标了 SC 但没有特性号。"
+    },
+    {
+      "message": "气泡 5 标了 SC 但没有特性号。"
+    },
+    {
+      "message": "气泡 19 标了 CC 但没有特性号。"
+    },
+    {
+      "message": "气泡 5 标了 SC 但没有特性号。"
+    },
+    {
+      "message": "气泡 8 的 SC 2 在特性表里对不上。"
+    },
+    {
+      "message": "气泡 2 标了 SC 但没有特性号。"
+    },
+    {
+      "message": "气泡 17 标了 CC 但没有特性号。"
+    }
+  ],
+  "notes": [
+    {
+      "no": "8",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "标识：模腔号、材料标识、回收标识按 HRJ-STD-014 执行，位置见 3D 数模。"
+    },
+    {
+      "no": "9",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "包装：PE 袋单件包装 + 分隔纸箱，120 件/箱，防划伤、防潮、防压变形。"
+    },
+    {
+      "no": "10",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "供方须提交 PPAP Level 3（含控制计划、PFMEA、MSA、SPC 与全尺寸报告）。"
+    },
+    {
+      "no": "11",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "未注圆角 R0.5 MAX，未注倒角 0.5×45°，未注壁厚 2.2±0.2。"
+    },
+    {
+      "no": "12",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "本图采用第一角投影法，单位 mm；与 3D 数模冲突时以本图为准。"
+    },
+    {
+      "no": "",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "说明：图中红色矩形框及其编号为关键尺寸/特性编号，用于 FAI 与 SIP 追溯，编号允许跨页重复。"
+    },
+    {
+      "no": "",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "本图为 SCE（关键尺寸识图）功能演示用示例图纸，非受控文件，不得用于生产。"
+    },
+    {
+      "no": "1",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "未注尺寸公差按 ISO 2768-m（GB/T 1804-m）；未注形位公差按 ISO 2768-K。"
+    },
+    {
+      "no": "2",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "材料：PA66-GF30，黑色，UL94 HB；符合 RoHS 2.0 与 REACH，禁用物质按 HRJ-STD-021。"
+    },
+    {
+      "no": "3",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "表面不得有飞边、缩痕、气泡、银丝及明显熔接痕；分型面飞边高度 ≤0.1mm。"
+    },
+    {
+      "no": "4",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "去毛刺，锐边倒钝 R0.2~0.5，不得影响装配与外观面。"
+    },
+    {
+      "no": "5",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "特殊特性（SC）与重要特性（CC）见下表，须纳入控制计划并做 SPC 管控，Cpk ≥1.33。"
+    },
+    {
+      "no": "6",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "全尺寸检测（FAI）按 HRJ-FAI 表单执行，频次 1 件/批，量具精度不低于公差带 1/10。"
+    },
+    {
+      "no": "7",
+      "page": 3,
+      "special": "NA",
+      "special_no": "",
+      "text": "皮纹 MT-11030（VDI 21）区域见 3D 数模，皮纹面不得有拉伤与光泽不均。"
+    }
+  ],
+  "characteristics": [
+    {
+      "cc_no": "",
+      "sc_no": "5",
+      "name": "2X Ø8.5 +0.1/0 安装孔径",
+      "params": "2X Ø8.5 +0.1/0 安装孔径；管控方式：通止规 100% + SPC（Cpk≥1.33）",
+      "view": "",
+      "zone": "",
+      "location": "",
+      "page": 3
+    },
+    {
+      "cc_no": "",
+      "sc_no": "9",
+      "name": "位置度Ø0.5 A B C（孔组）",
+      "params": "位置度Ø0.5 A B C（孔组）；管控方式：三坐标 CMM，1 件/批",
+      "view": "",
+      "zone": "",
+      "location": "",
+      "page": 3
+    },
+    {
+      "cc_no": "17",
+      "sc_no": "",
+      "name": "1.5 +0.05/-0.05 上壁厚",
+      "params": "1.5 +0.05/-0.05 上壁厚；管控方式：超声波测厚，5 件/批",
+      "view": "",
+      "zone": "",
+      "location": "",
+      "page": 3
+    },
+    {
+      "cc_no": "19",
+      "sc_no": "",
+      "name": "同轴度Ø0.2 A-B",
+      "params": "同轴度Ø0.2 A-B；管控方式：三坐标 CMM，1 件/班",
+      "view": "",
+      "zone": "",
+      "location": "",
+      "page": 3
+    },
+    {
+      "cc_no": "",
+      "sc_no": "5",
+      "name": "安装孔径",
+      "params": "2X Ø8.5 +0.1/0",
+      "view": "",
+      "zone": "",
+      "location": "",
+      "page": 3
+    }
+  ]
+};
+
+const $ = (id) => document.getElementById(id);
+
+const fillVersion = (text) => {
+  for (const node of document.querySelectorAll("#app_version, #app_version_foot")) {
+    node.textContent = text;
+  }
+};
+
+const cell = (value) => {
+  const td = document.createElement("td");
+  td.textContent = value == null || value === "" ? "" : String(value);
+  return td;
+};
+
+const fillTable = (tbody, rows, keys) => {
+  tbody.replaceChildren();
+  for (const row of rows || []) {
+    const tr = document.createElement("tr");
+    for (const key of keys) tr.appendChild(cell(row[key]));
+    tbody.appendChild(tr);
+  }
+};
+
+const specialLabel = (value) => {
+  const text = String(value || "NA").trim().toUpperCase();
+  if (text === "SC" || text === "CC") return text;
+  return "N/A";
+};
+
+const fmtBound = (value) => (value == null || value === "" ? "" : String(value));
+
+const inputCell = (key, value) => {
+  const td = document.createElement("td");
+  const input = document.createElement("input");
+  input.className = "fai-input";
+  input.dataset.k = key;
+  input.value = value == null ? "" : String(value);
+  td.appendChild(input);
+  return td;
+};
+
+const makeFaiRow = (row) => {
+  const tr = document.createElement("tr");
+  tr.appendChild(inputCell("num", row.num || ""));
+  const shot = document.createElement("td");
+  if (row.crop) {
+    const img = document.createElement("img");
+    img.className = "crop";
+    img.alt = `气泡 ${row.num || ""}`;
+    img.src = `crops/${encodeURIComponent(row.crop)}`;
+    shot.appendChild(img);
+  }
+  tr.appendChild(shot);
+  tr.appendChild(inputCell("special", specialLabel(row.special)));
+  tr.appendChild(inputCell("description", row.description || ""));
+  tr.appendChild(inputCell("min_val", fmtBound(row.min_val)));
+  tr.appendChild(inputCell("std_val", fmtBound(row.std_val)));
+  tr.appendChild(inputCell("max_val", fmtBound(row.max_val)));
+  return tr;
+};
+
+const demoNotice = (text) => {
+  $("status").textContent = text;
+};
+
+const showSample = () => {
+  const h = SAMPLE.header || {};
+  $("f_filename").value = h.filename || SAMPLE.filename || "";
+  $("f_customer").value = h.customer || "";
+  $("f_part_name").value = h.part_name || "";
+  $("f_mold_no").value = h.mold_no || "";
+  $("f_part_no").value = h.part_no || "";
+  $("f_drawing_no").value = h.drawing_no || "";
+  $("f_revision").value = h.revision || "";
+  const tbody = $("bubbles");
+  tbody.replaceChildren();
+  for (const row of SAMPLE.bubbles || []) tbody.appendChild(makeFaiRow(row));
+  const issues = $("issues");
+  issues.replaceChildren();
+  const items = SAMPLE.issues || [];
+  if (!items.length) {
+    const li = document.createElement("li");
+    li.textContent = "没有问题。";
+    issues.appendChild(li);
+  } else {
+    for (const item of items) {
+      const li = document.createElement("li");
+      li.textContent = item.message || "";
+      issues.appendChild(li);
+    }
+  }
+  fillTable($("notes"), SAMPLE.notes, ["no", "page", "special", "special_no", "text"]);
+  fillTable($("chars"), SAMPLE.characteristics, [
+    "cc_no", "sc_no", "name", "params", "view", "zone", "location", "page",
+  ]);
+  $("result").classList.remove("hidden");
+  $("export_btn").disabled = false;
+  $("save_bubbles").disabled = false;
+  $("save_header").disabled = false;
+  $("download").classList.remove("disabled");
+};
+
+const boot = () => {
+  fillVersion(SAMPLE.version ? `v${SAMPLE.version}` : "");
+  $("key_state").textContent = "静态演示，不连接 DeepSeek";
+  $("status").textContent = "静态演示：HRJ-DWG-2026-0187 安装支架核对页。不识图、不收 PDF。";
+  showSample();
+  $("start_btn").addEventListener("click", () => {
+    demoNotice("这是静态演示，不上传 PDF、不识图。");
+  });
+  $("save_header").addEventListener("click", () => {
+    demoNotice("这是静态演示，不保存编号。");
+  });
+  $("save_bubbles").addEventListener("click", () => {
+    demoNotice("这是静态演示，不保存气泡。");
+  });
+  $("export_btn").addEventListener("click", () => {
+    demoNotice("这是静态演示，不导出文档。");
+  });
+  $("download").addEventListener("click", (event) => {
+    event.preventDefault();
+    demoNotice("这是静态演示，不下载 JSON。");
+  });
+};
+
+boot();

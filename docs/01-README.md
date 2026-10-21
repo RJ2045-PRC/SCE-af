@@ -1,4 +1,4 @@
-# SCE-af v0.2.1
+# SCE-af v0.2.3
 
 本仓库说明：结构、实现、开发用法。给同事的安装与发布包见仓库根 [`README.md`](../README.md)。
 
@@ -46,7 +46,7 @@ DeepSeek 密钥放项目根 `api-key.md`，已被 gitignore。
   data/template/         SIP、QCP、检查清单、特殊特性清单
   tests/
   release/               pack.py（复制本机 .venv）
-  docs/                  01～05（含流程图）
+  docs/                  01～05、GitHub Pages 静态 Demo
   output/jobs/           每次任务的 PDF、JSON 与导出 zip
 ```
 

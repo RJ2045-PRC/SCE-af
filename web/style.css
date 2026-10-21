@@ -109,6 +109,25 @@ h2, h3 {
   padding-left: 1.2rem;
 }
 
+.crop {
+  display: block;
+  max-width: 120px;
+  max-height: 80px;
+  background: #fafafa;
+  border: 1px solid #ecece8;
+}
+
+.fai-input {
+  width: 100%;
+  min-width: 4rem;
+  box-sizing: border-box;
+}
+
+a.disabled {
+  pointer-events: none;
+  opacity: 0.45;
+}
+
 .site-foot {
   padding: 0.75rem 1.25rem;
   color: #666;

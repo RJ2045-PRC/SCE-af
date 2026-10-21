@@ -7,7 +7,7 @@ from typing import Any
 
 from sce_af.ids import merge_header
 from sce_af.limits import enrich_bubble
-from sce_af.vision import normalize_bubble, normalize_notes
+from sce_af.vision import normalize_bubble, normalize_notes, normalize_special
 
 
 def _issue(code: str, message: str, **extra: Any) -> dict[str, Any]:
@@ -36,6 +36,9 @@ def merge_job(
     bubbles = []
     for page, raw in bubble_raws:
         item = enrich_bubble(normalize_bubble(raw, page))
+        crop = str((raw or {}).get("crop") or "").strip()
+        if crop:
+            item["crop"] = crop
         if not item["num"]:
             issues.append(_issue("bubble_missing_num", "有气泡没有读到编号。", page=page))
         if not item["description"]:
@@ -117,4 +120,50 @@ def apply_header_edits(doc: dict, edits: dict) -> dict:
             header[key] = str(edits[key]).strip()
     out = dict(doc)
     out["header"] = header
+    return out
+
+
+def _as_float(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def apply_bubble_edits(doc: dict, rows: list[dict] | None) -> dict:
+    """Apply row edits. Description changes recompute bounds unless the three numbers also changed."""
+    bubbles = [dict(item) for item in doc.get("bubbles") or []]
+    for index, edit in enumerate(rows or []):
+        if index >= len(bubbles) or not isinstance(edit, dict):
+            continue
+        old = bubbles[index]
+        new = dict(old)
+        if "num" in edit and edit["num"] is not None:
+            new["num"] = str(edit["num"]).strip()
+        if "special" in edit and edit["special"] is not None:
+            new["special"] = normalize_special(edit["special"])
+            if new["special"] == "NA":
+                new["special_no"] = ""
+        if "description" in edit and edit["description"] is not None:
+            new["description"] = str(edit["description"]).strip()
+        desc_changed = new.get("description") != old.get("description")
+        bounds_changed = False
+        incoming = {}
+        for key in ("min_val", "std_val", "max_val"):
+            if key in edit:
+                incoming[key] = _as_float(edit[key])
+                if incoming[key] != _as_float(old.get(key)):
+                    bounds_changed = True
+        crop = old.get("crop") or ""
+        if desc_changed and not bounds_changed:
+            new = enrich_bubble(new)
+        elif bounds_changed:
+            new.update(incoming)
+        if crop:
+            new["crop"] = crop
+        bubbles[index] = new
+    out = dict(doc)
+    out["bubbles"] = bubbles
     return out

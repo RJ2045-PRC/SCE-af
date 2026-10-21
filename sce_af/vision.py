@@ -69,7 +69,13 @@ def parse_json_object(text: str) -> dict[str, Any]:
     return data
 
 
-def complete_vision(kind: str, png: bytes, *, api_key: str | None = None) -> dict[str, Any]:
+def complete_vision(
+    kind: str,
+    png: bytes,
+    *,
+    api_key: str | None = None,
+    thinking: bool | None = None,
+) -> dict[str, Any]:
     prompt = {
         "title": TITLE_PROMPT,
         "notes": NOTES_PROMPT,
@@ -91,6 +97,10 @@ def complete_vision(kind: str, png: bytes, *, api_key: str | None = None) -> dic
         ],
         "response_format": {"type": "json_object"},
     }
+    if thinking is False:
+        body["thinking"] = {"type": "disabled"}
+    elif thinking is True:
+        body["thinking"] = {"type": "enabled"}
     req = urllib.request.Request(
         DEEPSEEK_URL,
         data=json.dumps(body).encode("utf-8"),

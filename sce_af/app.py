@@ -14,7 +14,7 @@ from urllib.parse import unquote, urlparse
 from urllib.request import Request, urlopen
 
 from sce_af import __version__ as APP_VERSION
-from sce_af.jobs import create_job, export_job, get_job, patch_header, public_job
+from sce_af.jobs import create_job, crop_path, export_job, get_job, patch_header, public_job
 from sce_af.paths import web_dir
 from sce_af.secrets import has_deepseek_key
 
@@ -183,10 +183,19 @@ class Handler(BaseHTTPRequestHandler):
 
         if path.startswith("/api/jobs/"):
             rest = path[len("/api/jobs/") :]
+            if "/crops/" in rest:
+                job_id, _, name = rest.partition("/crops/")
+                found = crop_path(job_id, unquote(name))
+                if found is None:
+                    status, body = _json_bytes({"error": "not found"}, 404)
+                    self._send(status, body, "application/json; charset=utf-8")
+                    return
+                self._send(200, found.read_bytes(), "image/png")
+                return
             if rest.endswith("/json"):
                 job_id = rest[: -len("/json")]
                 job = get_job(job_id)
-                if job is None or not job.get("result"):
+                if job is None or job.get("status") != "done" or not job.get("result"):
                     status, body = _json_bytes({"error": "not found"}, 404)
                     self._send(status, body, "application/json; charset=utf-8")
                     return

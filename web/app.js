@@ -21,10 +21,90 @@ const fillTable = (tbody, rows, keys) => {
   }
 };
 
-const showResult = (job) => {
-  const result = job.result;
-  if (!result) return;
-  $("result").classList.remove("hidden");
+const specialLabel = (value) => {
+  const text = String(value || "NA").trim().toUpperCase();
+  if (text === "SC" || text === "CC") return text;
+  return "N/A";
+};
+
+const fmtBound = (value) => (value == null || value === "" ? "" : String(value));
+
+const inputCell = (key, value, extra = {}) => {
+  const td = document.createElement("td");
+  const input = document.createElement("input");
+  input.className = "fai-input";
+  input.dataset.k = key;
+  input.value = value == null ? "" : String(value);
+  if (extra.title) input.title = extra.title;
+  td.appendChild(input);
+  return td;
+};
+
+let renderedCrops = new Set();
+
+const cropKey = (row) => row.crop || `${row.page || ""}-${row.num || ""}`;
+
+const makeFaiRow = (jobId, row) => {
+  const tr = document.createElement("tr");
+  tr.dataset.crop = row.crop || "";
+  tr.appendChild(inputCell("num", row.num || ""));
+  const shot = document.createElement("td");
+  if (row.crop && jobId) {
+    const img = document.createElement("img");
+    img.className = "crop";
+    img.alt = `气泡 ${row.num || ""}`;
+    img.src = `/api/jobs/${jobId}/crops/${encodeURIComponent(row.crop)}`;
+    shot.appendChild(img);
+  }
+  tr.appendChild(shot);
+  tr.appendChild(inputCell("special", specialLabel(row.special)));
+  tr.appendChild(inputCell("description", row.description || ""));
+  tr.appendChild(inputCell("min_val", fmtBound(row.min_val)));
+  tr.appendChild(inputCell("std_val", fmtBound(row.std_val)));
+  tr.appendChild(inputCell("max_val", fmtBound(row.max_val)));
+  return tr;
+};
+
+const fillFai = (job, { reset = false } = {}) => {
+  const tbody = $("bubbles");
+  const rows = (job.result && job.result.bubbles) || [];
+  if (reset) {
+    renderedCrops = new Set();
+    tbody.replaceChildren();
+  }
+  for (const row of rows) {
+    const key = cropKey(row);
+    if (renderedCrops.has(key)) continue;
+    renderedCrops.add(key);
+    tbody.appendChild(makeFaiRow(job.id, row));
+  }
+};
+
+const collectBubbles = () =>
+  [...$("bubbles").querySelectorAll("tr")].map((tr) => ({
+    num: tr.querySelector("[data-k=num]").value,
+    special: tr.querySelector("[data-k=special]").value,
+    description: tr.querySelector("[data-k=description]").value,
+    min_val: tr.querySelector("[data-k=min_val]").value,
+    std_val: tr.querySelector("[data-k=std_val]").value,
+    max_val: tr.querySelector("[data-k=max_val]").value,
+  }));
+
+const setDoneUi = (done, job) => {
+  $("export_btn").disabled = !done;
+  $("save_bubbles").disabled = !done;
+  $("save_header").disabled = !done;
+  $("download").classList.toggle("disabled", !done);
+  $("issues_card").classList.toggle("hidden", !done);
+  $("notes_card").classList.toggle("hidden", !done);
+  if (done && job) {
+    $("download").href = `/api/jobs/${job.id}/json`;
+    $("export_btn").dataset.jobId = job.id;
+  }
+};
+
+const showHeader = (job) => {
+  const result = job.result || {};
   const h = result.header || {};
   $("f_filename").value = h.filename || job.filename || "";
   $("f_customer").value = h.customer || "";
@@ -33,6 +113,10 @@ const showResult = (job) => {
   $("f_part_no").value = h.part_no || "";
   $("f_drawing_no").value = h.drawing_no || "";
   $("f_revision").value = h.revision || "";
+};
+
+const showIssuesAndNotes = (job) => {
+  const result = job.result || {};
   const issues = $("issues");
   issues.replaceChildren();
   for (const item of result.issues || []) {
@@ -45,16 +129,25 @@ const showResult = (job) => {
     li.textContent = "没有问题。";
     issues.appendChild(li);
   }
-  fillTable($("bubbles"), result.bubbles, [
-    "num", "page", "special", "special_no", "type", "description", "nominal", "upper", "lower",
-  ]);
   const req = result.requirements || {};
   fillTable($("notes"), req.notes, ["no", "page", "special", "special_no", "text"]);
   fillTable($("chars"), req.characteristics, [
     "cc_no", "sc_no", "name", "params", "view", "zone", "location", "page",
   ]);
-  $("download").href = `/api/jobs/${job.id}/json`;
-  $("export_btn").dataset.jobId = job.id;
+};
+
+const showResult = (job) => {
+  if (!job || !job.result) return;
+  $("result").classList.remove("hidden");
+  showHeader(job);
+  const done = job.status === "done";
+  setDoneUi(done, job);
+  if (done) {
+    fillFai(job, { reset: true });
+    showIssuesAndNotes(job);
+  } else {
+    fillFai(job);
+  }
 };
 
 const headerEdits = () => ({
@@ -76,11 +169,18 @@ const currentJobId = () => {
 
 const poll = async (id) => {
   const progress = $("progress");
+  $("export_btn").dataset.jobId = id;
   for (;;) {
     const resp = await fetch(`/api/jobs/${id}`);
     const job = await resp.json();
     const msg = (job.progress && job.progress.message) || job.status || "";
     progress.textContent = msg;
+    if (job.result && (job.result.bubbles || []).length) {
+      $("result").classList.remove("hidden");
+      showHeader(job);
+      fillFai(job);
+      setDoneUi(false, job);
+    }
     if (job.status === "done") {
       $("status").textContent = "识图完成，请核对。";
       showResult(job);
@@ -88,6 +188,7 @@ const poll = async (id) => {
     }
     if (job.status === "error") {
       $("status").textContent = job.error || "失败";
+      if (job.result && (job.result.bubbles || []).length) showResult(job);
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 800));
@@ -122,6 +223,10 @@ const boot = async () => {
     $("result").classList.add("hidden");
     $("status").textContent = "上传中…";
     $("progress").textContent = "";
+    renderedCrops = new Set();
+    $("bubbles").replaceChildren();
+    $("export_btn").disabled = true;
+    $("export_btn").dataset.jobId = "";
     const body = new FormData();
     body.append("file", file, file.name);
     const resp = await fetch("/api/jobs", { method: "POST", body });
@@ -157,6 +262,23 @@ const boot = async () => {
     showResult(job);
   });
 
+  $("save_bubbles").addEventListener("click", async () => {
+    const id = currentJobId();
+    if (!id) return;
+    const resp = await fetch(`/api/jobs/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...headerEdits(), bubbles: collectBubbles() }),
+    });
+    const job = await resp.json();
+    if (!resp.ok) {
+      $("status").textContent = job.error || "保存失败";
+      return;
+    }
+    $("status").textContent = "气泡已保存。";
+    showResult(job);
+  });
+
   $("export_btn").addEventListener("click", async () => {
     const id = currentJobId();
     if (!id) return;
@@ -164,7 +286,7 @@ const boot = async () => {
     const resp = await fetch(`/api/jobs/${id}/export`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(headerEdits()),
+      body: JSON.stringify({ ...headerEdits(), bubbles: collectBubbles() }),
     });
     if (!resp.ok) {
       let message = "导出失败";

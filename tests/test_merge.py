@@ -1,4 +1,4 @@
-from sce_af.merge import apply_header_edits, merge_job
+from sce_af.merge import apply_bubble_edits, apply_header_edits, merge_job
 from sce_af.pipeline import run_pipeline
 
 
@@ -34,6 +34,31 @@ def test_apply_header_edits():
     out = apply_header_edits(doc, {"mold_no": "LG-PT26500", "part_no": "P1"})
     assert out["header"]["mold_no"] == "LG-PT26500"
     assert out["header"]["part_no"] == "P1"
+
+
+def test_apply_bubble_edits_desc_recomputes_unless_bounds_changed():
+    doc = {
+        "bubbles": [
+            {
+                "num": "1",
+                "special": "NA",
+                "description": "2.2 ±0.1",
+                "type": "尺寸",
+                "min_val": 2.1,
+                "std_val": 2.2,
+                "max_val": 2.3,
+                "crop": "p01-001.png",
+            }
+        ]
+    }
+    recomputed = apply_bubble_edits(doc, [{"description": "10 ±0.2"}])
+    assert recomputed["bubbles"][0]["std_val"] == 10
+    assert recomputed["bubbles"][0]["min_val"] == 9.8
+    assert recomputed["bubbles"][0]["crop"] == "p01-001.png"
+    manual = apply_bubble_edits(doc, [{"description": "10 ±0.2", "min_val": 1, "std_val": 2, "max_val": 3}])
+    assert manual["bubbles"][0]["min_val"] == 1
+    assert manual["bubbles"][0]["std_val"] == 2
+    assert manual["bubbles"][0]["max_val"] == 3
 
 
 def test_pipeline_uses_injected_vision(tmp_path):

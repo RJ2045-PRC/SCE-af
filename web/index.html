@@ -34,30 +34,36 @@
           <label>图号 <input id="f_drawing_no" /></label>
           <label>版本 <input id="f_revision" /></label>
         </div>
-        <button id="save_header" type="button">保存编号</button>
+        <button id="save_header" type="button" disabled>保存编号</button>
       </section>
 
       <section class="card">
-        <h2>问题</h2>
-        <ul id="issues"></ul>
-      </section>
-
-      <section class="card">
-        <h2>气泡</h2>
+        <h2>气泡 / FAI</h2>
         <div class="tablewrap">
           <table>
             <thead>
               <tr>
-                <th>号</th><th>页</th><th>特殊特性</th><th>特性号</th>
-                <th>类型</th><th>描述</th><th>名义</th><th>上限</th><th>下限</th>
+                <th>编号</th>
+                <th>截图</th>
+                <th>N/A</th>
+                <th>描述</th>
+                <th>最小值</th>
+                <th>标准值</th>
+                <th>最大值</th>
               </tr>
             </thead>
             <tbody id="bubbles"></tbody>
           </table>
         </div>
+        <button id="save_bubbles" type="button" disabled>保存气泡</button>
       </section>
 
-      <section class="card">
+      <section id="issues_card" class="card">
+        <h2>问题</h2>
+        <ul id="issues"></ul>
+      </section>
+
+      <section id="notes_card" class="card">
         <h2>技术要求</h2>
         <h3>条文</h3>
         <div class="tablewrap">
@@ -84,7 +90,7 @@
 
       <p>
         <a id="download" href="#">下载 JSON</a>
-        <button id="export_btn" type="button">导出文档</button>
+        <button id="export_btn" type="button" disabled>导出文档</button>
       </p>
     </section>
   </main>
