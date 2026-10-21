@@ -1,0 +1,4 @@
+{
+  "include": ["sce_af", "tests", "release", "run.py", "setup_env.py"],
+  "extraPaths": ["release"]
+}

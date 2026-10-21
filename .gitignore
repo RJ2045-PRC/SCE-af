@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+build/
+dist/
+release/*.zip
+release/SCE-af v*/
+output/*
+!output/.gitkeep
+.pytest_cache/
+.mypy_cache/
+.pyright/
+api-key.md
+**/api-key.md
+apikey.txt

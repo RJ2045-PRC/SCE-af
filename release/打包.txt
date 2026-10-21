@@ -1,0 +1,11 @@
+# 打包（Windows 虚拟机）
+
+在这台 Windows 上打出带本机 `.venv` 的源码 zip。不要在 Mac 上打 `-win64` 包。
+
+1. 安装 Python 3.10+。
+2. 若项目在 `\\Mac\Home\...` 这类共享盘，也可直接双击 `pack.bat`：脚本不 `cd`，`pack.py` 会拷到 `C:\sce-af-pack` 再打包。
+3. 首次：`python setup_env.py`（或 `py -3 setup_env.py`）。
+4. 双击 `release\pack.bat`。
+5. 取出 `release\SCE-af v{版本}-win64.zip`。
+
+Mac 请用 `打包.command`，产物没有 `-win64` 后缀。

@@ -1,0 +1,3 @@
+# Runtime deps. Add only what the slice imports.
+PyMuPDF>=1.24,<2
+pillow>=10.0
