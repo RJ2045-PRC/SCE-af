@@ -22,6 +22,26 @@
       <p id="progress" class="muted"></p>
     </section>
 
+    <section id="flow" class="flow-view hidden" aria-label="图纸实时处理流程">
+      <div class="flow-heading"><div><h2>从图纸，到检验数据</h2><p id="flow_filename"></p></div><span id="flow_overall"></span></div>
+      <p id="flow_phase" class="flow-phase" role="status" aria-live="polite"></p>
+      <div class="flow-pipeline">
+        <section class="flow-source">
+          <div class="flow-label"><strong>PDF 图纸</strong><span id="flow_page"></span></div>
+          <div id="flow_drawing" class="flow-drawing"><img id="flow_preview" alt="当前 PDF 页面预览" hidden /><div id="flow_regions"></div><div class="flow-scan"></div><p id="flow_preview_wait">等待页面转图</p></div>
+          <div class="flow-legend"><span>标题栏</span><span>气泡</span><span>技术要求</span></div>
+          <p class="flow-file-source">文件名 → 基本信息</p><p id="flow_slice_count"></p>
+        </section>
+        <div class="flow-routing" aria-hidden="true"><i></i><i></i><i></i><span>切片分流</span></div>
+        <section id="flow_lanes" class="flow-lanes" aria-label="三路识别进度"></section>
+        <div class="flow-merge-wire" aria-hidden="true"></div>
+        <section id="flow_json" class="flow-json"><span class="flow-braces">{ }</span><strong>JSON</strong><span id="flow_json_state">等待三路结果</span></section>
+      </div>
+      <p id="flow_notice" class="flow-notice" role="status" hidden></p>
+      <div class="flow-export"><span id="flow_review">等待识别完成</span><span>→</span><span id="flow_export_state">核对后填充 5 份 Excel 模板</span></div>
+      <p class="flow-foot">基本信息 · 气泡尺寸 · 技术要求　/　识图模型每次仅接收一块 PNG</p>
+    </section>
+
     <section id="result" class="hidden">
       <section class="card">
         <h2>图纸基本信息</h2>
@@ -95,6 +115,6 @@
     </section>
   </main>
   <footer class="site-foot"><span id="app_version_foot"></span></footer>
-  <script src="demo.js"></script>
+  <script type="module" src="demo.js"></script>
 </body>
 </html>

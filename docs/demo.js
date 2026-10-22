@@ -1,3 +1,5 @@
+import { FlowView } from "./flow.js";
+
 const SAMPLE = {
   "version": "0.2.3",
   "status": "done",
@@ -645,6 +647,108 @@ const demoNotice = (text) => {
   $("status").textContent = text;
 };
 
+const STATUS_PLAYING = "静态演示：正在回放切块。不识图、不收 PDF。";
+const STATUS_DONE = "静态演示：上方是切块回放，下方是冻结核对样例。不识图、不收 PDF。";
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const copyChannels = (channels) => JSON.parse(JSON.stringify(channels));
+const emptyChannels = (totals) => Object.fromEntries(
+  ["title", "bubble", "notes"].map((kind) => [kind, {
+    total: totals[kind] || 0, succeeded: 0, running: 0, failed: 0, queued: totals[kind] || 0,
+  }]),
+);
+
+const flow = new FlowView();
+let playToken = 0;
+let exportTimer = 0;
+
+const playFlow = async () => {
+  const token = ++playToken;
+  $("result").classList.add("hidden");
+  demoNotice(STATUS_PLAYING);
+  flow.show(SAMPLE.filename);
+  let data;
+  try {
+    const response = await fetch("flow/pages.json");
+    if (!response.ok) throw new Error(String(response.status));
+    data = await response.json();
+  } catch {
+    demoNotice("静态演示：切块回放未能加载，下方仍是冻结核对样例。不识图、不收 PDF。");
+    showSample();
+    return;
+  }
+  if (token !== playToken) return;
+  const filename = data.filename || SAMPLE.filename;
+  const job = {
+    id: `demo-${token}`,
+    filename,
+    status: "running",
+    progress: { stage: "raster", done: 0, total: 0, message: `转图 1/${data.page_count} 页` },
+    flow: { page_count: data.page_count, pages: [], channels: {} },
+  };
+  flow.update(job);
+  const pages = [];
+  let sliced = 0;
+  for (const page of data.pages || []) {
+    await sleep(280);
+    if (token !== playToken) return;
+    job.progress = {
+      stage: "raster", page: page.page, page_count: data.page_count, done: sliced, total: 0,
+      message: `转图 ${page.page}/${data.page_count} 页`,
+    };
+    flow.update(job);
+    await sleep(320);
+    if (token !== playToken) return;
+    pages.push(page);
+    sliced += (page.regions || []).length;
+    job.progress = {
+      stage: "slice", page: page.page, page_count: data.page_count, done: sliced, total: 0,
+      message: `已切块 ${page.page}/${data.page_count} 页，共 ${sliced} 块`,
+    };
+    job.flow = { page_count: data.page_count, pages: pages.slice(), channels: {} };
+    flow.update(job);
+  }
+  await sleep(350);
+  if (token !== playToken) return;
+  const channels = emptyChannels(data.totals || {});
+  job.progress = { stage: "planned", done: 0, total: data.task_count, message: `切出 ${data.task_count} 块` };
+  job.flow = { page_count: data.page_count, pages: pages.slice(), channels: copyChannels(channels) };
+  flow.update(job);
+  const sequence = [];
+  for (const kind of ["title", "bubble", "notes"]) {
+    for (let i = 0; i < (data.totals?.[kind] || 0); i += 1) sequence.push(kind);
+  }
+  let done = 0;
+  const total = sequence.length;
+  for (const kind of sequence) {
+    await sleep(220);
+    if (token !== playToken) return;
+    channels[kind].queued -= 1;
+    channels[kind].running += 1;
+    job.progress = { stage: "vision", done, total, message: `识图 ${done}/${total}` };
+    job.flow = { ...job.flow, channels: copyChannels(channels) };
+    flow.update(job);
+    await sleep(160);
+    if (token !== playToken) return;
+    channels[kind].running -= 1;
+    channels[kind].succeeded += 1;
+    done += 1;
+    job.progress = { stage: "vision", done, total, message: `识图 ${done}/${total}` };
+    job.flow = { ...job.flow, channels: copyChannels(channels) };
+    flow.update(job);
+  }
+  await sleep(280);
+  if (token !== playToken) return;
+  job.progress = { stage: "merge", done: total, total, message: "解析公差 · 合并校验" };
+  flow.update(job);
+  await sleep(400);
+  if (token !== playToken) return;
+  job.status = "done";
+  job.progress = { stage: "done", done: total, total, message: "完成" };
+  flow.update(job);
+  showSample();
+  demoNotice(STATUS_DONE);
+};
+
 const showSample = () => {
   const h = SAMPLE.header || {};
   $("f_filename").value = h.filename || SAMPLE.filename || "";
@@ -685,10 +789,11 @@ const showSample = () => {
 const boot = () => {
   fillVersion(SAMPLE.version ? `v${SAMPLE.version}` : "");
   $("key_state").textContent = "静态演示，不连接 DeepSeek";
-  $("status").textContent = "静态演示：HRJ-DWG-2026-0187 安装支架核对页。不识图、不收 PDF。";
-  showSample();
-  $("start_btn").addEventListener("click", () => {
+  $("pdf_file").addEventListener("change", () => {
     demoNotice("这是静态演示，不上传 PDF、不识图。");
+  });
+  $("start_btn").addEventListener("click", () => {
+    playFlow();
   });
   $("save_header").addEventListener("click", () => {
     demoNotice("这是静态演示，不保存编号。");
@@ -697,12 +802,16 @@ const boot = () => {
     demoNotice("这是静态演示，不保存气泡。");
   });
   $("export_btn").addEventListener("click", () => {
+    clearTimeout(exportTimer);
+    flow.setExport("running");
     demoNotice("这是静态演示，不导出文档。");
+    exportTimer = setTimeout(() => flow.setExport("idle"), 900);
   });
   $("download").addEventListener("click", (event) => {
     event.preventDefault();
     demoNotice("这是静态演示，不下载 JSON。");
   });
+  playFlow();
 };
 
 boot();
