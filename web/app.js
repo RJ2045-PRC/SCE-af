@@ -1,3 +1,8 @@
+import { FlowView } from "./flow.js";
+
+const flow = new FlowView();
+let busy = false;
+
 const fillVersion = (text) => {
   for (const node of document.querySelectorAll("#app_version, #app_version_foot")) {
     node.textContent = text;
@@ -173,9 +178,11 @@ const poll = async (id) => {
   for (;;) {
     const resp = await fetch(`/api/jobs/${id}`);
     const job = await resp.json();
+    if (!resp.ok) throw new Error(job.error || "无法读取任务进度");
+    flow.update(job);
     const msg = (job.progress && job.progress.message) || job.status || "";
     progress.textContent = msg;
-    if (job.result && (job.result.bubbles || []).length) {
+    if (job.result) {
       $("result").classList.remove("hidden");
       showHeader(job);
       fillFai(job);
@@ -213,13 +220,20 @@ const boot = async () => {
     $("key_state").textContent = "";
   }
 
-  $("start_btn").addEventListener("click", async () => {
-    const input = $("pdf_file");
-    const file = input.files && input.files[0];
+  const startFile = async (file) => {
+    if (busy) return;
     if (!file) {
       $("status").textContent = "请先选择 PDF。";
       return;
     }
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      $("status").textContent = "只接受 PDF 图纸。";
+      return;
+    }
+    busy = true;
+    $("start_btn").disabled = true;
+    $("pdf_file").disabled = true;
+    flow.show(file.name);
     $("result").classList.add("hidden");
     $("status").textContent = "上传中…";
     $("progress").textContent = "";
@@ -229,21 +243,42 @@ const boot = async () => {
     $("export_btn").dataset.jobId = "";
     const body = new FormData();
     body.append("file", file, file.name);
-    const resp = await fetch("/api/jobs", { method: "POST", body });
-    const job = await resp.json();
-    if (!resp.ok) {
-      $("status").textContent = job.error || "上传失败";
+    try {
+      const resp = await fetch("/api/jobs", { method: "POST", body });
+      const job = await resp.json();
+      if (!resp.ok) throw new Error(job.error || "上传失败");
+      $("status").textContent = "正在切图识图…";
+      await poll(job.id);
+    } catch (err) {
+      $("status").textContent = err.message || "无法连接本机服务";
+      flow.fail($("status").textContent);
+    } finally {
+      busy = false;
+      $("start_btn").disabled = false;
+      $("pdf_file").disabled = false;
+    }
+  };
+
+  $("start_btn").addEventListener("click", () => startFile($("pdf_file").files?.[0]));
+  const dropZone = $("drop_zone");
+  for (const event of ["dragenter", "dragover"]) {
+    dropZone.addEventListener(event, (e) => {
+      e.preventDefault();
+      if (!busy) dropZone.classList.add("drag-over");
+    });
+  }
+  dropZone.addEventListener("dragleave", (e) => {
+    if (!dropZone.contains(e.relatedTarget)) dropZone.classList.remove("drag-over");
+  });
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("drag-over");
+    if (e.dataTransfer.files.length !== 1) {
+      $("status").textContent = "请每次拖入一份 PDF 图纸。";
       return;
     }
-    $("status").textContent = "正在切图识图…";
-    await poll(job.id);
+    startFile(e.dataTransfer.files[0]);
   });
-
-  const pending = new URLSearchParams(location.search).get("job");
-  if (pending) {
-    $("status").textContent = "正在切图识图…";
-    await poll(pending);
-  }
 
   $("save_header").addEventListener("click", async () => {
     const id = currentJobId();
@@ -281,35 +316,66 @@ const boot = async () => {
 
   $("export_btn").addEventListener("click", async () => {
     const id = currentJobId();
-    if (!id) return;
+    if (!id || flow.exporting) return;
+    $("export_btn").disabled = true;
+    $("start_btn").disabled = true;
+    busy = true;
+    flow.setExport("running");
     $("status").textContent = "正在导出文档…";
-    const resp = await fetch(`/api/jobs/${id}/export`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...headerEdits(), bubbles: collectBubbles() }),
-    });
-    if (!resp.ok) {
-      let message = "导出失败";
-      try {
-        const payload = await resp.json();
-        message = payload.error || message;
-      } catch (err) {
-        message = "导出失败";
+    try {
+      const resp = await fetch(`/api/jobs/${id}/export`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...headerEdits(), bubbles: collectBubbles() }),
+      });
+      if (!resp.ok) {
+        let message = "导出失败";
+        try {
+          const payload = await resp.json();
+          message = payload.error || message;
+        } catch (err) {
+          message = "导出失败";
+        }
+        $("status").textContent = message;
+        flow.setExport("error");
+        return;
       }
-      $("status").textContent = message;
-      return;
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${id}-docs.zip`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      $("status").textContent = "文档已导出。";
+      flow.setExport("done");
+    } catch (err) {
+      $("status").textContent = err.message || "导出失败";
+      flow.setExport("error");
+    } finally {
+      $("export_btn").disabled = false;
+      $("start_btn").disabled = false;
+      busy = false;
     }
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${id}-docs.zip`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-    $("status").textContent = "文档已导出。";
   });
+
+  const pending = new URLSearchParams(location.search).get("job");
+  if (pending) {
+    busy = true;
+    $("start_btn").disabled = true;
+    $("pdf_file").disabled = true;
+    try { await poll(pending); }
+    catch (err) {
+      $("status").textContent = err.message || "无法读取任务";
+      flow.fail($("status").textContent);
+    } finally {
+      busy = false;
+      $("start_btn").disabled = false;
+      $("pdf_file").disabled = false;
+    }
+  }
 };
 
 boot();

@@ -60,6 +60,8 @@ DeepSeek 密钥放项目根 `api-key.md`，已被 gitignore。
 
 主流程不读 PDF。`plan_pdf` 切出 title / notes / bubble 任务，每块一张 PNG；`vision.complete_vision` 只看这一块；`merge_job` 解析公差并列出问题。核对后 `export_docs` 复制模板填格。
 
+本地工作区新增实时流程图：`web/flow.js` 显示逐页缩略图、实际裁切区域和三路任务计数；数字跟随后端快照，页面切换与进度条在前端缓冲，不阻塞识图。`plan_pdf` 回调保存页面预览与归一化坐标，`run_pipeline` 上报各路排队、处理中、成功、失败数；`jobs` 的 `flow` 字段保留这些状态，最终 `result.json` 不包含动画数据。切片失败列入问题，其余切片继续。页面预览只在本机展示，不发送给模型。当前改动待随下一版本发布。
+
 ## 4. 测试与发布
 
 ```bash

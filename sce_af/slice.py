@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from PIL import Image
 
@@ -32,7 +32,7 @@ def title_crop(img: Image.Image) -> Image.Image:
     return img.crop((x0, y0, w, h))
 
 
-def _band_crops(img: Image.Image, bands: int = 3, overlap: float = 0.12) -> list[Image.Image]:
+def _band_crops(img: Image.Image, bands: int = 3, overlap: float = 0.12) -> list[tuple[Image.Image, tuple[int, int, int, int]]]:
     w, h = img.size
     # Inner drawing area, drop the outer frame letters.
     x0, y0 = int(w * 0.04), int(h * 0.07)
@@ -46,7 +46,7 @@ def _band_crops(img: Image.Image, bands: int = 3, overlap: float = 0.12) -> list
         bot = min(y1, int(y0 + (i + 1) * step) + (overlap_px if i < bands - 1 else 0))
         crop = img.crop((x0, top, x1, bot))
         if fill_ratio(crop) >= EMPTY_FILL:
-            out.append(crop)
+            out.append((crop, (x0, top, x1, bot)))
     return out
 
 
@@ -92,12 +92,13 @@ def _plan_page(img: Image.Image, page: int, *, is_first: bool) -> tuple[list[Sli
     if len(boxes) >= 1:
         for idx, box in enumerate(boxes, start=1):
             crop = crop_box(img, box, pad=24)
+            padded = box.padded(24, img.width, img.height)
             tasks.append(
                 SliceTask(
                     kind="bubble",
                     page=page,
                     png=encode(crop),
-                    box=(box.x, box.y, box.w, box.h),
+                    box=(padded.x, padded.y, padded.x + padded.w, padded.y + padded.h),
                     extra={"index": idx},
                 )
             )
@@ -108,12 +109,13 @@ def _plan_page(img: Image.Image, page: int, *, is_first: bool) -> tuple[list[Sli
     detect_s += time.perf_counter() - t0
     if ratio < EMPTY_FILL or is_first or ratio < 0.03:
         return tasks, _page_meta(page, detect_s, encode_s, len(tasks))
-    for idx, crop in enumerate(_band_crops(img), start=1):
+    for idx, (crop, box) in enumerate(_band_crops(img), start=1):
         tasks.append(
             SliceTask(
                 kind="notes",
                 page=page,
                 png=encode(crop),
+                box=box,
                 extra={"band": idx},
             )
         )
@@ -129,12 +131,16 @@ def plan_pdf(
     pdf_path: Path,
     dpi: int = 140,
     timing_out: dict[str, Any] | None = None,
+    on_progress: Callable[[dict[str, Any]], None] | None = None,
 ) -> list[SliceTask]:
     n = page_count(pdf_path)
     tasks: list[SliceTask] = []
     pages: list[dict[str, Any]] = []
     started = time.perf_counter()
     for page in range(1, n + 1):
+        if on_progress:
+            on_progress({"stage": "raster", "page": page, "page_count": n,
+                         "done": len(tasks), "total": 0, "message": f"转图 {page}/{n} 页"})
         t0 = time.perf_counter()
         img = render_page(pdf_path, page, dpi=dpi)
         raster_s = time.perf_counter() - t0
@@ -142,6 +148,22 @@ def plan_pdf(
         page_meta["raster_s"] = _seconds(raster_s)
         pages.append(page_meta)
         tasks.extend(page_tasks)
+        if on_progress:
+            preview = img.copy()
+            preview.thumbnail((900, 900))
+            regions = []
+            for task in page_tasks:
+                if task.box:
+                    x0, y0, x1, y1 = task.box
+                    regions.append({"kind": task.kind, "box": [
+                        x0 / img.width, y0 / img.height, x1 / img.width, y1 / img.height,
+                    ]})
+            on_progress({
+                "stage": "slice", "page": page, "page_count": n,
+                "done": len(tasks), "total": 0, "message": f"已切块 {page}/{n} 页，共 {len(tasks)} 块",
+                "page_preview": {"name": f"page-{page:03d}.png", "png": image_png_bytes(preview)},
+                "page_info": {"page": page, "preview": f"page-{page:03d}.png", "regions": regions},
+            })
     if timing_out is not None:
         timing_out.clear()
         timing_out.update(

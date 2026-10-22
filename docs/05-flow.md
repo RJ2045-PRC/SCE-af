@@ -7,9 +7,10 @@
 ```mermaid
 flowchart TD
   openPage[打开127.0.0.1] --> pickPdf[选择气泡图PDF]
-  pickPdf --> upload["POST /api/jobs"]
+  pickPdf --> upload["POST /api/jobs（也可拖入自动开始）"]
   upload --> waitJob[页面轮询进度]
-  waitJob --> bubblesFirst[气泡先出现]
+  waitJob --> flow[逐页标框与三路动画数字]
+  flow --> bubblesFirst[气泡先出现]
   bubblesFirst --> review[核对基本信息气泡技术要求]
   review --> editRows[可手改编号与FAI]
   editRows --> download[下载JSON]
@@ -27,7 +28,8 @@ flowchart TD
   savePdf[任务目录写入source.pdf] --> raster[逐页光栅]
   raster --> slice[切成标题栏红色气泡或技术要求条带]
   slice --> vision["DeepSeek识图，默认最多100路"]
-  vision --> merge[汇总JSON并解析公差列出问题]
+  vision --> sliceFailed[失败切片计数并列入问题其余继续]
+  sliceFailed --> merge[汇总JSON并解析公差列出问题]
   merge --> resultFile[写入result.json]
   resultFile --> page[页面核对]
   page --> jsonDl[下载JSON]
@@ -36,6 +38,8 @@ flowchart TD
 ```
 
 `plan_pdf` 先光栅再切块；每块一张 PNG，`complete_vision` 只看这一块。识图默认最多 100 路并发。`merge_job` 解析公差并列出问题，结果写入任务目录的 `result.json`。
+
+本地工作区新增：每页切块后在任务 `crops/` 下保存 `page-NNN.png` 缩略图，只供本机页面显示。轮询响应的 `flow.pages` 保留实际裁切框，`flow.channels` 保存 title / bubble / notes 三路统计；完成后仍保留，避免快速任务被轮询漏掉。前端即时更新数字、缓冲逐页展示，不延迟后台。单块失败不取消其他块，失败项进入 JSON 的问题列表；流程图仍等待用户核对后再随真实导出请求展示模板填充。
 
 ## JSON 每块写到哪儿
 

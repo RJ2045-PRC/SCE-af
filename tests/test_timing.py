@@ -75,12 +75,10 @@ def test_pipeline_keeps_timing_when_vision_fails(tmp_path):
         raise RuntimeError("vision-fail")
 
     timing: dict = {}
-    try:
-        run_pipeline(pdf, "LG-26554.pdf", vision=boom, workers=1, timing_out=timing)
-    except RuntimeError as exc:
-        assert "vision-fail" in str(exc)
-    else:
-        raise AssertionError("expected vision failure")
+    result = run_pipeline(pdf, "LG-26554.pdf", vision=boom, workers=1, timing_out=timing)
+    failures = [issue for issue in result["issues"] if issue["code"] == "slice_failed"]
+    assert len(failures) == timing["vision"]["count"]
+    assert result["bubbles"] == []
     assert timing["slice"]["s"] >= 0
     assert timing["vision"]["slices"]
     assert timing["vision"]["slices"][0]["ok"] is False

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from sce_af.export_docs import write_export_zip
+from sce_af.ids import merge_header
 from sce_af.merge import apply_bubble_edits, apply_header_edits
 from sce_af.paths import repo_root
 from sce_af.pipeline import run_pipeline
@@ -42,6 +43,9 @@ def _crops_dir(job_id: str) -> Path:
 
 
 def crop_path(job_id: str, name: str) -> Path | None:
+    with _LOCK:
+        if job_id not in _JOBS:
+            return None
     if not name or "/" in name or "\\" in name or ".." in name:
         return None
     if not name.endswith(".png"):
@@ -54,15 +58,7 @@ def crop_path(job_id: str, name: str) -> Path | None:
 
 def _empty_result(filename: str) -> dict[str, Any]:
     return {
-        "header": {
-            "filename": filename,
-            "customer": "",
-            "part_name": "",
-            "mold_no": "",
-            "part_no": "",
-            "drawing_no": "",
-            "revision": "",
-        },
+        "header": merge_header(filename),
         "bubbles": [],
         "requirements": {"notes": [], "characteristics": []},
         "issues": [],
@@ -81,6 +77,7 @@ def public_job(job: dict[str, Any]) -> dict[str, Any]:
         "status": job["status"],
         "filename": job.get("filename") or "",
         "progress": job.get("progress") or {},
+        "flow": job.get("flow") or {},
         "error": job.get("error") or "",
         "result": job.get("result"),
     }
@@ -98,6 +95,7 @@ def create_job(filename: str, pdf_bytes: bytes) -> dict[str, Any]:
         "pdf_path": str(pdf_path),
         "progress": {"stage": "queued", "done": 0, "total": 0, "message": "排队"},
         "error": "",
+        "flow": {"pages": [], "channels": {}, "page_count": 0},
         "result": _empty_result(filename),
     }
     with _LOCK:
@@ -150,7 +148,24 @@ def _run(job_id: str) -> None:
             crop = payload.pop("crop", None)
             if crop:
                 _save_crop(job_id, crop)
-            _update(job_id, progress=payload)
+            preview = payload.pop("page_preview", None)
+            if preview:
+                name = preview["name"]
+                if name.startswith("page-") and name.endswith(".png") and "/" not in name and "\\" not in name and ".." not in name:
+                    (_crops_dir(job_id) / name).write_bytes(preview["png"])
+            page_info = payload.pop("page_info", None)
+            header = payload.pop("partial_header", None)
+            with _LOCK:
+                current = _JOBS[job_id]
+                flow = current["flow"]
+                for key in ("channels", "page", "page_count"):
+                    if key in payload:
+                        flow[key] = payload[key]
+                if page_info:
+                    flow["pages"].append(page_info)
+                if header:
+                    current["result"]["header"] = header
+                current["progress"] = payload
 
         result = _invoke_runner(Path(job["pdf_path"]), job["filename"], on_progress, timing)
         out = _job_dir(job_id) / "result.json"
